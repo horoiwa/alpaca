@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from alpaca.ml.ensemble_model import (EnsembleDartReg, EnsembleGBTReg,
                                       EnsembleKernelSVR, EnsembleLinearSVR,
                                       EnsembleRidge)
-from alpaca.ml.tests.support import get_df_boston
+from .support import get_df_boston
 
 
 class TestEnsemblelModels:

@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 
 from alpaca.ml.single_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
                                     LinearSVRCV, RidgeCV)
-from alpaca.ml.tests.support import get_df_boston
+from .support import get_df_boston
 
 
 class TestSingelModels:
