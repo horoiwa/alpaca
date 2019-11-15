@@ -168,7 +168,7 @@ class EnsembleGBTReg(BaseEnsembleModel):
 
 
 if __name__ == '__main__':
-    from alpaca.ml.tests.support import get_df_boston
+    from tests.support import get_df_boston
     args = {"n_models": 3,
             "col_ratio": 0.8,
             "row_ratio": 0.8,

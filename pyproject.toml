@@ -17,7 +17,7 @@ optuna = "^0.18.1"
 xgboost = "^0.90.0"
 
 [tool.poetry.scripts]
-test = "pytest -v -p no:warnings"
+test = "alpaca:ml.model"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
