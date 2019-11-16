@@ -1,3 +1,5 @@
+from abc import abstractclassmethod
+
 import pandas as pd
 import numpy as np
 
@@ -14,12 +16,14 @@ class BaseModel:
         print(X, y)
 
     def predict(self, X, uncertainty=False):
+        X = self._input_validation(X)
         pass
 
     def predict_proba(self):
         pass
 
     def score(self):
+        X, y = self._input_validation(X, y)
         pass
 
     def _input_validation(self, *args, **kwargs):
@@ -40,16 +44,33 @@ class BaseModel:
         else:
             raise Exception("Unexpected input")
 
-    @classmethod
-    def from_config(cls, config):
-        return BaseModel(config)
+
+class BaseAutoModel(BaseModel):
+
+    config = None
+
+    def __new__(cls):
+        cls.config = cls.optimize()
+        return super().__init__(cls)
+
+    @abstractclassmethod
+    def optimize(cls):
+        raise NotImplementedError()
+
+    def __init__(self):
+        super().__init__(self.config)
 
 
-class RegressionModel(BaseModel):
+class AutoRegressionModel(BaseAutoModel):
+
+    def __new__(cls):
+        cls.config = cls.optimize()
+        return super().__new__(cls)
 
     @classmethod
     def optimize(cls):
-        pass
+        config = BaseModelConfig()
+        return config
 
 
 if __name__ == '__main__':
