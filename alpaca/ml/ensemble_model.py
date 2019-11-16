@@ -34,10 +34,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         self.n_jobs = n_jobs
 
     def fit(self, X, y):
-        assert isinstance(X, pd.DataFrame)
-        if isinstance(y, pd.Series):
-            y = pd.DataFrame(y, y.name)
-        assert isinstance(y, pd.DataFrame)
+        X, y = self._input_validation(X, y)
 
         self.models = {}
         self.scalers = {}
@@ -45,9 +42,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         self._rprs_modeling(X, y)
 
     def predict(self, X, uncertainty=False):
-        if isinstance(X, pd.Series):
-            X = pd.DataFrame(X.values.reshape(1, -1))
-        assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
+        X = self._input_validation(X)
 
         df_result = pd.DataFrame()
         for i in range(self.n_models):
@@ -73,10 +68,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         return self.predict(X, uncertainty=True)
 
     def score(self, X, y):
-        assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
-        if isinstance(y, pd.Series):
-            y = pd.DataFrame(y, columns=[y.name])
-        assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
+        X, y = self._input_validation(X, y)
 
         y_true = y.values.flatten()
         y_pred = self.predict(X).flatten()
@@ -84,10 +76,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         return r2_score(y_true, y_pred)
 
     def valid(self, X, y, test_size=0.3):
-        assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
-        if isinstance(y, pd.Series):
-            y = pd.DataFrame(y, columns=[y.name])
-        assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
+        X, y = self._input_validation(X, y)
 
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size)
@@ -133,6 +122,24 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         scaler = copy.deepcopy(scaler)
 
         return mask, model, scaler
+
+    def _input_validation(self, *args, **kwargs):
+        if len(args) >= 1:
+            X = args[0]
+            if isinstance(X, pd.Series):
+                X = pd.DataFrame(X).T
+            assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
+
+            if len(args) >= 2:
+                y = args[1]
+                if isinstance(y, pd.Series):
+                    y = pd.DataFrame(y, columns=[y.name])
+                assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
+                return X, y
+            else:
+                return X
+        else:
+            raise Exception("Unexpected input")
 
     def get_model(self):
         return self.single_model_cls(n_trials=self.n_trials,

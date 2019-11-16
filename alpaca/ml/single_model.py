@@ -18,15 +18,16 @@ warnings.filterwarnings('ignore')
 class BaseSingleModelCV(metaclass=ABCMeta):
 
     model_cls = None
-    n_splits = 3
-    n_repeats = 3
 
-    def __init__(self, n_trials=300, metric='mse'):
+    def __init__(self, n_trials=300, metric='mse',
+                 n_splits=3, n_repeats=3):
         self.n_trials = n_trials
         self.metric = metric
+        self.n_splits = 3
+        self.n_repeats = 3
 
     def fit(self, X, y):
-        self.X, self.y = self.check_inputs(X, y)
+        self.X, self.y = self._input_validation(X, y)
 
         study = optuna.create_study(direction='minimize')
         study.optimize(self, n_trials=self.n_trials)
@@ -40,37 +41,17 @@ class BaseSingleModelCV(metaclass=ABCMeta):
         self.best_model = self.model_cls(**self.best_trial.params)
         self.best_model.fit(self.X, self.y)
 
-    def check_inputs(self, X, y):
-        assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
-        if isinstance(y, pd.Series):
-            y = pd.DataFrame(y, columns=[y.name])
-        assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
-
-        X = X.reset_index(drop=True)
-        y = y.reset_index(drop=True)
-
-        return X, y
-
     def predict(self, X):
-        if isinstance(X, pd.Series):
-            X = pd.DataFrame(X.values.reshape(1, -1))
-        assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
-
+        X = self._input_validation(X)
         return self.best_model.predict(X)
 
     def score(self, X, y):
-        assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
-        if isinstance(y, pd.Series):
-            y = pd.DataFrame(y, columns=[y.name])
-        assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
+        X, y = self._input_validation(X, y)
 
         return self.best_model.score(X, y)
 
     def valid(self, X, y, test_size=0.3):
-        assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
-        if isinstance(y, pd.Series):
-            y = pd.DataFrame(y, columns=[y.name])
-        assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
+        X, y = self._input_validation(X, y)
 
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size)
@@ -108,6 +89,24 @@ class BaseSingleModelCV(metaclass=ABCMeta):
             NotImplementedError('Unknown metric:', self.metric)
 
         return score
+
+    def _input_validation(self, *args, **kwargs):
+        if len(args) >= 1:
+            X = args[0]
+            if isinstance(X, pd.Series):
+                X = pd.DataFrame(X).T
+            assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
+
+            if len(args) >= 2:
+                y = args[1]
+                if isinstance(y, pd.Series):
+                    y = pd.DataFrame(y, columns=[y.name])
+                assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
+                return X, y
+            else:
+                return X
+        else:
+            raise Exception("Unexpected input")
 
     @abstractmethod
     def __call__(self, trial):
@@ -214,21 +213,16 @@ class DartRegCV(BaseSingleModelCV):
 
 if __name__ == '__main__':
     import pandas as pd
+    from tests.support import get_df_boston
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
 
-    df = pd.read_csv('sample/boston.csv')
-    y = df['Price']
-    X = df.drop(['Price'], 1)
+    X, y = get_df_boston()
+    X_sc = pd.DataFrame(StandardScaler().fit_transform(X), columns=X.columns)
+    X_train, X_test, y_train, y_test = train_test_split(X_sc, y, test_size=0.3)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    scaler = StandardScaler()
-    scaler.fit(X_train)
-
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
-
-    model = SVRCV(n_trials=300)
+    #model = LinearSVRCV(n_trials=10)
+    model = GBTRegCV(n_trials=10)
     model.fit(X_train, y_train)
 
     print(model.score(X_test, y_test))

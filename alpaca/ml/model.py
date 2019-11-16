@@ -4,11 +4,31 @@ import numpy as np
 from alpaca.ml.config import BaseModelConfig
 
 
-def _input_validation(func):
-    def wrapper(self, *args, **kwargs):
+class BaseModel:
+
+    def __init__(self, config=None):
+        self.config = config if config else BaseModelConfig()
+
+    def fit(self, X, y):
+        X, y = self._input_validation(X, y)
+        print(X, y)
+
+    def predict(self, X, uncertainty=False):
+        pass
+
+    def predict_proba(self):
+        pass
+
+    def score(self):
+        pass
+
+    def _input_validation(self, *args, **kwargs):
         if len(args) >= 1:
             X = args[0]
+            if isinstance(X, pd.Series):
+                X = pd.DataFrame(X).T
             assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
+
             if len(args) >= 2:
                 y = args[1]
                 if isinstance(y, pd.Series):
@@ -19,27 +39,6 @@ def _input_validation(func):
                 return X
         else:
             raise Exception("Unexpected input")
-
-    return wrapper
-
-
-class BaseModel:
-
-    def __init__(self, config=None):
-        self.config = config if config else BaseModelConfig()
-
-    @_input_validation
-    def fit(self, X, y):
-        self.input_validation(X, y)
-
-    def predict(self, uncertainty=False):
-        pass
-
-    def predict_proba(self):
-        pass
-
-    def score(self):
-        pass
 
     @classmethod
     def from_config(cls, config):
