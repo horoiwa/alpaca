@@ -69,11 +69,8 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         else:
             return pred_mean
 
-    def predict_uncertainty(self, X):
-        return self.predict(X, uncertainty=True)
-
     def predict_proba(self, X):
-        return self.predict_uncertainty(X)
+        return self.predict(X, uncertainty=True)
 
     def score(self, X, y):
         assert isinstance(X, pd.DataFrame), 'X must be DataFrame'

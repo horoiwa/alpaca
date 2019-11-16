@@ -1,37 +1,56 @@
-from abc import abstractmethod, ABCMeta
-from dataclasses import asdict, dataclass
+import pandas as pd
+import numpy as np
 
-from alpaca.ml.ensemble_model import EnsembleRidge, BaseEnsembleModel
-from alpaca.ml.preprocess import BaseFillna, KneignborFillna
-from alpaca.ml.postprocess import BaseAverage, MeanAverage
+from alpaca.ml.config import BaseModelConfig
 
 
-@dataclass
-class BaseModelConfig:
+def _input_validation(func):
+    def wrapper(self, *args, **kwargs):
+        if len(args) >= 1:
+            X = args[0]
+            assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
+            if len(args) >= 2:
+                y = args[1]
+                if isinstance(y, pd.Series):
+                    y = pd.DataFrame(y, columns=[y.name])
+                assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
+                return X, y
+            else:
+                return X
+        else:
+            raise Exception("Unexpected input")
 
-    fillna: BaseFillna = KneignborFillna
-
-    poly: int = 1
-
-    ensemble_layer: BaseEnsembleModel = EnsembleRidge
-
-    output_layer: BaseAverage = MeanAverage
+    return wrapper
 
 
-class BaseModel(metaclass=ABCMeta):
+class BaseModel:
 
     def __init__(self, config=None):
+        self.config = config if config else BaseModelConfig()
+
+    @_input_validation
+    def fit(self, X, y):
+        self.input_validation(X, y)
+
+    def predict(self, uncertainty=False):
+        pass
+
+    def predict_proba(self):
+        pass
+
+    def score(self):
         pass
 
     @classmethod
     def from_config(cls, config):
         return BaseModel(config)
 
-    def add_model(self):
+
+class RegressionModel(BaseModel):
+
+    @classmethod
+    def optimize(cls):
         pass
-
-
-RegressionModel = BaseModel.from_config(BaseModelConfig())
 
 
 if __name__ == '__main__':
@@ -46,6 +65,4 @@ if __name__ == '__main__':
 
     X, y = get_df_boston()
     model = BaseModel()
-    print(type(EnsembleRidge()))
-    print(isinstance(EnsembleRidge(), BaseEnsembleModel))
-    print(asdict(BaseModelConfig(EnsembleRidge)))
+    model.fit(X, y)

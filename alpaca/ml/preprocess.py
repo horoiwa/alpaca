@@ -23,7 +23,7 @@ class MedianFillna(BaseFillna):
         columns = df.columns
 
 
-class KneignborFillna(BasFillna):
+class KneignborFillna(BaseFillna):
 
     def fillna(self, df):
         columns = df.columns
