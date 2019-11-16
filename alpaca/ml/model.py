@@ -1,9 +1,11 @@
-from abc import abstractclassmethod
+from abc import abstractmethod
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from alpaca.ml.config import BaseModelConfig
+from alpaca.ml.ensemble_model import (EnsembleKernelSVR, EnsembleLinearSVR,
+                                      EnsembleRidge)
 
 
 class BaseModel:
@@ -47,30 +49,28 @@ class BaseModel:
 
 class BaseAutoModel(BaseModel):
 
-    config = None
+    ensemble_layers = []
 
-    def __new__(cls):
-        cls.config = cls.optimize()
-        return super().__init__(cls)
+    def fit(self, X, y):
+        self.config = self._optimize(X, y)
+        super().fit(X, y)
 
-    @abstractclassmethod
-    def optimize(cls):
+    def _optimize(self, X, y):
+        config = BaseModelConfig()
+        model = BaseModel(config=config)
+        model.fit(X, y)
+
+        best_config = None
+        return best_config
+
+    def _evaluate(self, X, y):
         raise NotImplementedError()
-
-    def __init__(self):
-        super().__init__(self.config)
 
 
 class AutoRegressionModel(BaseAutoModel):
 
-    def __new__(cls):
-        cls.config = cls.optimize()
-        return super().__new__(cls)
+    ensemble_layers = [EnsembleRidge]
 
-    @classmethod
-    def optimize(cls):
-        config = BaseModelConfig()
-        return config
 
 
 if __name__ == '__main__':
