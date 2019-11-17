@@ -56,8 +56,8 @@ class Model:
             raise Exception("Unexpected input")
 
     @classmethod
-    def load_config(cls):
-        adapter = DatasetAdapter.from_config()
+    def load_json(cls, adapter_config_path=None, model_config_path=None):
+        adapter = DatasetAdapter.load_json(adapter_config_path)
         model_config = None
         return cls(adapter=adapter, model_config=model_config)
 
