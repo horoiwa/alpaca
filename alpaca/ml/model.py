@@ -13,13 +13,17 @@ class Model:
 
     def __init__(self, adapter=None, model_config=None):
         self.adapter = adapter
-        self.model_config = model_config if model_config else BaseModelConfig()
+        self.model_config = model_config
 
     def fit(self, X, y):
         X, y = self._input_validation(X, y)
 
         if not self.adapter:
+            print("No adapter config found: Create config")
             self.adapter = DatasetAdapter(X, y)
+        if not self.model_config:
+            print("No model config found: Use BaseModelConfig")
+            self.model_config = BaseModelConfig()
 
         print(X, y)
 
