@@ -1,20 +1,26 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 
 import numpy as np
 import pandas as pd
 
 from alpaca.ml.config import BaseModelConfig
+from alpaca.ml.adapter import DatasetAdapter
 from alpaca.ml.ensemble_model import (EnsembleKernelSVR, EnsembleLinearSVR,
-                                      EnsembleRidge)
+                                      EnsembleRidge, EnsembleLinearReg)
 
 
-class BaseModel:
+class Model:
 
-    def __init__(self, config=None):
-        self.config = config if config else BaseModelConfig()
+    def __init__(self, adapter=None, model_config=None):
+        self.adapter = adapter
+        self.model_config = model_config if model_config else BaseModelConfig()
 
     def fit(self, X, y):
         X, y = self._input_validation(X, y)
+
+        if not self.adapter:
+            self.adapter = DatasetAdapter(X, y)
+
         print(X, y)
 
     def predict(self, X, uncertainty=False):
@@ -24,8 +30,11 @@ class BaseModel:
     def predict_proba(self):
         pass
 
-    def score(self):
+    def score(self, X, y):
         X, y = self._input_validation(X, y)
+        pass
+
+    def show_config(self):
         pass
 
     def _input_validation(self, *args, **kwargs):
@@ -46,10 +55,16 @@ class BaseModel:
         else:
             raise Exception("Unexpected input")
 
+    @classmethod
+    def load_config(cls):
+        adapter = DatasetAdapter.from_config()
+        model_config = None
+        return cls(adapter=adapter, model_config=model_config)
 
-class BaseAutoModel(BaseModel):
 
-    ensemble_layers = []
+class AutoModel(Model, metaclass=ABCMeta):
+
+    ensemblelayer_candidates = []
 
     def fit(self, X, y):
         self.config = self._optimize(X, y)
@@ -57,7 +72,7 @@ class BaseAutoModel(BaseModel):
 
     def _optimize(self, X, y):
         config = BaseModelConfig()
-        model = BaseModel(config=config)
+        model = Model(config=config)
         model.fit(X, y)
 
         best_config = None
@@ -67,14 +82,16 @@ class BaseAutoModel(BaseModel):
         raise NotImplementedError()
 
 
-class AutoRegressionModel(BaseAutoModel):
+class AutoRegressionModel(AutoModel):
 
-    ensemble_layers = [EnsembleRidge]
+    ensemblelayer_candidates = [EnsembleRidge, EnsembleLinearReg,
+                                EnsembleLinearSVR, EnsembleKernelSVR]
 
 
 
 if __name__ == '__main__':
     from tests.support import get_df_boston
+    from sklearn.model_selection import train_test_split
     args = {"n_models": 3,
             "col_ratio": 0.8,
             "row_ratio": 0.8,
@@ -84,5 +101,8 @@ if __name__ == '__main__':
             "n_jobs": 2}
 
     X, y = get_df_boston()
-    model = BaseModel()
-    model.fit(X, y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    model = Model()
+    model.fit(X_train, y_train)
+    print(model.predidct(X_test))
+    print(model.score(X_test, y_test))

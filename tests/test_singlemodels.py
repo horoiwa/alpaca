@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from alpaca.ml.single_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
-                                    LinearSVRCV, RidgeCV)
+                                    LinearSVRCV, RidgeCV, ElasticNetCV)
 from .support import get_df_boston
 
 
@@ -44,6 +44,14 @@ class TestSingelModels:
 
     def test_lasso(self):
         model = LassoCV(n_trials=self.n_trials, metric=self.metric)
+        model.fit(self.X_train, self.y_train)
+        model.predict(self.X_test)
+        score = model.score(self.X_test, self.y_test)
+
+        assert score > self.reasonable_score
+
+    def test_elasticnet(self):
+        model = ElasticNetCV(n_trials=self.n_trials, metric=self.metric)
         model.fit(self.X_train, self.y_train)
         model.predict(self.X_test)
         score = model.score(self.X_test, self.y_test)

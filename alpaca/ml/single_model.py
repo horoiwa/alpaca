@@ -7,7 +7,7 @@ import optuna
 import pandas as pd
 import sklearn
 import xgboost as xgb
-from sklearn.linear_model import Lasso, Ridge
+from sklearn.linear_model import Lasso, Ridge, ElasticNet
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import KFold, RepeatedKFold, train_test_split
 from sklearn.svm import SVR
@@ -129,6 +129,17 @@ class LassoCV(BaseSingleModelCV):
     def __call__(self, trial):
         alpha = trial.suggest_loguniform('alpha', 1e-3, 1e2)
         model = self.model_cls(alpha=alpha)
+        score = self.kfold_cv(model)
+        return score
+
+
+class ElasticNetCV(BaseSingleModelCV):
+    model_cls = ElasticNet
+
+    def __call__(self, trial):
+        alpha = trial.suggest_loguniform('alpha', 1e-3, 1e2)
+        l1_ratio = trial.suggest_loguniform('l1_ratio', 1e-3, 1e2)
+        model = self.model_cls(alpha=alpha, l1_ratio=l1_ratio)
         score = self.kfold_cv(model)
         return score
 

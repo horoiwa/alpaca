@@ -1,6 +1,7 @@
 import copy
 import pickle
 from abc import ABCMeta, abstractmethod
+import random
 
 import numpy as np
 import pandas as pd
@@ -12,12 +13,12 @@ from sklearn.preprocessing import StandardScaler
 
 import matplotlib.pyplot as plt
 from alpaca.ml.single_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
-                                    LinearSVRCV, RidgeCV)
+                                    LinearSVRCV, RidgeCV, ElasticNetCV)
 
 
 class BaseEnsembleModel(metaclass=ABCMeta):
 
-    single_model_cls = None
+    single_model_cls = []
 
     def __init__(self,
                  n_models=30, col_ratio=0.7, row_ratio=0.7,
@@ -114,7 +115,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
 
         y_rp = copy.deepcopy(y[sample_mask])
 
-        model = self.get_model()
+        model = self._get_model()
         model.fit(X_rprs, y_rp)
 
         mask = copy.deepcopy(mask)
@@ -141,34 +142,39 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         else:
             raise Exception("Unexpected input")
 
-    def get_model(self):
-        return self.single_model_cls(n_trials=self.n_trials,
-                                     metric=self.metric)
+    def _get_model(self):
+        model_cls = random.choice(self.single_model_cls)
+        return model_cls(n_trials=self.n_trials, metric=self.metric)
 
 
 class EnsembleRidge(BaseEnsembleModel):
 
-    single_model_cls = RidgeCV
+    single_model_cls = [RidgeCV]
 
 
 class EnsembleLinearSVR(BaseEnsembleModel):
 
-    single_model_cls = LinearSVRCV
+    single_model_cls = [LinearSVRCV]
 
 
 class EnsembleKernelSVR(BaseEnsembleModel):
 
-    single_model_cls = KernelSVRCV
+    single_model_cls = [KernelSVRCV]
 
 
 class EnsembleDartReg(BaseEnsembleModel):
 
-    single_model_cls = DartRegCV
+    single_model_cls = [DartRegCV]
 
 
 class EnsembleGBTReg(BaseEnsembleModel):
 
-    single_model_cls = GBTRegCV
+    single_model_cls = [GBTRegCV]
+
+
+class EnsembleLinearReg(BaseEnsembleModel):
+
+    single_model_cls = [RidgeCV, LassoCV, LinearSVRCV, ElasticNetCV]
 
 
 if __name__ == '__main__':
@@ -182,10 +188,10 @@ if __name__ == '__main__':
             "n_jobs": 2}
 
     X, y = get_df_boston()
-    model = EnsembleRidge(**args)
+    model = EnsembleLinearReg(**args)
     model.fit(X, y)
     print(model.predict(X).shape)
     print(model.predict_proba(X).shape)
     score = model.score(X, y)
     print(score)
-    model.valid(X, y)
+    #model.valid(X, y)
