@@ -14,13 +14,14 @@ class DataAdapter:
         pass
 
     @classmethod
-    def from_config(cls):
-        config = AdapterConfig.load_json('adapter_config.json')
+    def from_json(cls, adapter_config_path):
+        config = AdapterConfig.load_json(adapter_config_path)
         return cls(config)
 
 
 
 if __name__ == '__main__':
+    from tests.support import get_df_boston
     X, y = get_df_boston()
     adapter = DataAdapter()
     adapter.fit(X, y)
@@ -29,7 +30,6 @@ if __name__ == '__main__':
     X_raw = adapeter.MLToRaw(X_ml)
 
     adapter.save("adapter_config.json")
-    model.fit(X_train, y_train)
 
 
 
