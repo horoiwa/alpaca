@@ -45,6 +45,24 @@ class DataAdapter:
             config_json = json.loads(config_json)
             json.dump(config_json, f)
 
+    def RawToML(self, X):
+        pass
+
+    def RawToGA(self, X):
+        pass
+
+    def MLToRaw(self, X_ml):
+        pass
+
+    def MLtoGA(self, X_ml):
+        self.RawToGA(self.MLToRaw(X_ml))
+
+    def GAToRaw(self, X_ga):
+        pass
+
+    def GAToML(self, X_ga):
+        return self.RawToML(self.GAToRaw(X_ga))
+
     def _input_validation(self, *args, **kwargs):
         if len(args) >= 1:
             X = args[0]
@@ -91,6 +109,10 @@ if __name__ == '__main__':
 
     X_ml = adapter.RawToML(X)
     X_raw = adapeter.MLToRaw(X_ml)
+    X_ga = adapeter.RawToGA(X)
+    X_raw = adapeter.GAToRaw(X_ga)
+    X_ga = adapeter.MLToGA(X_ml)
+    X_ml = adapeter.GAToML(X_ga)
 
     adapter.save("adapter_config.json")
 
