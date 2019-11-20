@@ -28,4 +28,12 @@ class TestAdapter:
         assert adapter.config.explainers == ["A", "B", "C"]
         assert adapter.config.objectives == ["D", "E"]
 
+    def test_reload_config(self):
+        self.adapter.config.explainers = ["A", "B", "C"]
+        self.adapter.config.objectives = ["D", "E"]
+        self.adapter.save(self.path_to_save)
+        adapter = DataAdapter()
+        adapter.reload_config(self.path_to_save)
+        assert adapter.config.explainers == ["A", "B", "C"]
+        assert adapter.config.objectives == ["D", "E"]
 

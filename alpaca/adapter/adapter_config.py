@@ -9,11 +9,15 @@ class AdapterConfig:
 
     explainers: List[str] = None
 
+    explainers_type: Dict[str, str] = None
+
     objectives: List[str] = None
 
-    no_use_cols: List[str] = None
+    objectives_type: Dict[str, str] = None
 
-    constraint_max_min: Dict[str, List[int]] = None
+    all_explainers: List[str] = None
+
+    constraint_max_min: Dict[str, List[float]] = None
 
     constraint_discrete: Dict[str, List[int]] = None
 

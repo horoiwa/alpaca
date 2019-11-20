@@ -1,6 +1,8 @@
 import os
 import json
+import logging
 
+import numpy as np
 import pandas as pd
 from alpaca.adapter.adapter_config import AdapterConfig
 
@@ -22,11 +24,90 @@ class DataAdapter:
         alpaca.ml.Model and alpaca.optimize.Optimizer
     """
 
+    #: if unique elements in a column less than this,
+    #: tha column be regarded as categorical variable
+    categorical_threshold = 15
+    affordable_defeat = 0.3
+
     def __init__(self, config=None):
         self.config = config if config else AdapterConfig()
 
     def fit(self, X, y):
+        """generate_config
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            explainers
+        y : pd.DataFrame
+            objectives
+        """
         X, y = self._input_validation(X, y)
+
+        if X.shape[0] < 150:
+            self.categorical_threshold = 15
+        elif X.shape[0] < 500:
+            self.categorical_threshold = 50
+        else:
+            self.categorical_threshold = max(200, X.shape[0]*0.2)
+
+        self._detect_variables(X, y)
+        self._detect_constraints(X)
+        print(self.config.to_json())
+
+    def _detect_variables(self, X, y):
+        self.config.all_explainers = list(X.columns)
+
+        explainers = []
+        explainers_type = {}
+        for col in X.columns:
+            defeat = round(X[col].isna().mean(), 3)
+            if defeat < self.affordable_defeat:
+                explainers.append(col)
+            else:
+                logging.warning(f'"{col}" {defeat*100}% of value is nan -> excluded')
+                continue
+            variable_type = self._get_variabletype(X[col])
+            explainers_type[col] = variable_type
+            logging.info(f"{col} (explainer): {variable_type}")
+
+        self.config.explainers = explainers
+        self.config.explainers_type = explainers_type
+
+        objective_type = {}
+        for col in y.columns:
+            variable_type = self._get_variabletype(y[col])
+            objective_type[col] = variable_type
+            logging.info(f"{col} (objective): {variable_type}")
+        self.config.objectives = list(y.columns)
+        self.config.objective_type = objective_type
+
+    def _get_variabletype(self, x):
+        values = x.dropna()
+
+        n_uniques = len(set(values))
+        if n_uniques <= self.categorical_threshold:
+            if np.all([isinstance(val, str) for val in values]):
+                return "categorical_label"
+            elif np.all([isinstance(val, (int, float)) for val in values]):
+                return "categorical_order"
+            else:
+                raise Exception("Unexpected error #11")
+
+        try:
+            values = [float(value) for value in values]
+        except ValueError:
+            raise Exception("Categorical variable coantains"
+                            + " too many unique elements, "
+                            + "Please manually set categorical threshold value")
+
+        if np.all([value.is_integer for value in values]):
+            return "numerical_int"
+        else:
+            return "numerical_float"
+
+    def _detect_constraints(self, X):
+        self.detect_max_min(X)
 
     def save(self, path_to_save=None):
         """Dump config into json
@@ -81,6 +162,10 @@ class DataAdapter:
         else:
             raise Exception("Unexpected input")
 
+    def reload_config(self, path_to_config):
+        with open(path_to_config, "r") as f:
+            self.config = AdapterConfig.from_json(f.read())
+
     @classmethod
     def from_json(cls, path_to_config):
         """Load config and instanciate DataAdapter from json file
@@ -102,11 +187,15 @@ class DataAdapter:
 
 
 if __name__ == '__main__':
-    from tests.support import get_df_boston
-    X, y = get_df_boston()
+    from tests.support import get_df_boston2
+
+    logging.basicConfig(level=logging.INFO)
+    logging.info('Started')
+    X, y = get_df_boston2()
     adapter = DataAdapter()
     adapter.fit(X, y)
-
+    logging.info('Finished')
+    """
     X_ml = adapter.RawToML(X)
     X_raw = adapeter.MLToRaw(X_ml)
     X_ga = adapeter.RawToGA(X)
@@ -115,6 +204,7 @@ if __name__ == '__main__':
     X_ml = adapeter.GAToML(X_ga)
 
     adapter.save("adapter_config.json")
+    """
 
 
 
