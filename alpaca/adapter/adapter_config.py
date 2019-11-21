@@ -1,11 +1,18 @@
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 
 @dataclass_json
 @dataclass
 class AdapterConfig:
+    """variable type maps
+        categorical_label : label
+        categorical_order : numerical
+        numerical_float : numerical
+        numrical_int : numerical
+        no_use : too many nan
+    """
 
     explainers: List[str] = None
 
@@ -15,15 +22,13 @@ class AdapterConfig:
 
     objectives_type: Dict[str, str] = None
 
-    all_explainers: List[str] = None
+    ml_explainers: List[str] = None
 
-    constraint_max_min: Dict[str, List[float]] = None
+    ga_explainers: List[str] = None
 
-    constraint_discrete: Dict[str, List[int]] = None
+    label_groups: Dict[str, List[str]] = None
 
-    constraint_categorical: Dict[str, List[Any]] = None
-
-    constraint_sum_equal: List[Dict[int, List[str]]] = None
+    label_variables: Dict[str, str] = None
 
     class Meta:
         ordered = True

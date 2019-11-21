@@ -26,7 +26,6 @@ class DataAdapter:
 
     #: if unique elements in a column less than this,
     #: tha column be regarded as categorical variable
-    categorical_threshold = 15
     affordable_defeat = 0.3
 
     def __init__(self, config=None):
@@ -47,27 +46,26 @@ class DataAdapter:
         if X.shape[0] < 150:
             self.categorical_threshold = 15
         elif X.shape[0] < 500:
-            self.categorical_threshold = 50
+            self.categorical_threshold = 30
         else:
-            self.categorical_threshold = max(200, X.shape[0]*0.2)
+            self.categorical_threshold = 50
 
-        self._detect_variables(X, y)
-        self._detect_constraints(X)
-        print(self.config.to_json())
+        self.mapping_variables(X, y)
 
-    def _detect_variables(self, X, y):
-        self.config.all_explainers = list(X.columns)
+    def mapping_variables(self, X, y):
 
         explainers = []
         explainers_type = {}
         for col in X.columns:
+            explainers.append(col)
+
             defeat = round(X[col].isna().mean(), 3)
-            if defeat < self.affordable_defeat:
-                explainers.append(col)
+            if defeat > self.affordable_defeat:
+                logging.warning(f'"{col}" {defeat*100}% of value is nan')
+                variable_type = "no_use"
             else:
-                logging.warning(f'"{col}" {defeat*100}% of value is nan -> excluded')
-                continue
-            variable_type = self._get_variabletype(X[col])
+                variable_type = self._get_variabletype(X[col])
+
             explainers_type[col] = variable_type
             logging.info(f"{col} (explainer): {variable_type}")
 
@@ -106,10 +104,7 @@ class DataAdapter:
         else:
             return "numerical_float"
 
-    def _detect_constraints(self, X):
-        self.detect_max_min(X)
-
-    def save(self, path_to_save=None):
+    def save(self, path_to_save):
         """Dump config into json
 
         Parameters
@@ -117,7 +112,6 @@ class DataAdapter:
         path_to_save : str
             path_to_save json, ex. "~/adapter_config.json"
         """
-        path_to_save = path_to_save if path_to_save else "adapter_config.json"
         if os.path.exists(path_to_save):
             print(f"Overwritten Warning: {path_to_save} already exists")
             os.remove(path_to_save)
@@ -126,7 +120,9 @@ class DataAdapter:
             config_json = json.loads(config_json)
             json.dump(config_json, f)
 
-    def RawToML(self, X):
+    def RawToML(self, X_raw):
+        if X_raw.columns != self.config.explainers:
+            raise Exception("Inconsitent columns")
         pass
 
     def RawToGA(self, X):
@@ -194,6 +190,7 @@ if __name__ == '__main__':
     X, y = get_df_boston2()
     adapter = DataAdapter()
     adapter.fit(X, y)
+    adapter.save("example/config.json")
     logging.info('Finished')
     """
     X_ml = adapter.RawToML(X)

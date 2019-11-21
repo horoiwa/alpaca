@@ -24,6 +24,9 @@ def get_df_boston2():
 
     X["Temperature"] = [random.choice(list(range(0, 50, 5)))
                         for _ in range(X.shape[0])]
+    X["AdditiveA"] = [random.randrange(100) for _ in range(X.shape[0])]
+    X["AdditiveB"] = 100 - X["AdditiveA"]
+
     y = pd.DataFrame(boston.target, columns=["Price"])
     y["Tax"] = X["TAX"]
     X = X.drop(["TAX"], 1)
