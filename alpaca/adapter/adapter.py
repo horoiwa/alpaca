@@ -110,7 +110,7 @@ class DataAdapter:
         Parameters
         ----------
         path_to_save : str
-            path_to_save json, ex. "~/adapter_config.json"
+            path_to_save json
         """
         if os.path.exists(path_to_save):
             print(f"Overwritten Warning: {path_to_save} already exists")
