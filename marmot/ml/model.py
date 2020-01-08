@@ -3,9 +3,9 @@ from abc import abstractmethod, ABCMeta
 import numpy as np
 import pandas as pd
 
-from alpaca.ml.config import BaseModelConfig
-from alpaca.ml.adapter import DatasetAdapter
-from alpaca.ml.ensemble_model import (EnsembleKernelSVR, EnsembleLinearSVR,
+from marmot.ml.config import BaseModelConfig
+from marmot.ml.adapter import DatasetAdapter
+from marmot.ml.ensemble_model import (EnsembleKernelSVR, EnsembleLinearSVR,
                                       EnsembleRidge, EnsembleLinearReg)
 
 

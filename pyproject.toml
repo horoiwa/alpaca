@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "alpaca"
+name = "marmot"
 version = "0.1.0"
 description = "machine learning and experimental design for materials discovery"
 license = "MIT"
@@ -18,7 +18,7 @@ xgboost = "^0.90.0"
 dataclasses_json = "^0.3.6"
 
 [tool.poetry.scripts]
-test = "alpaca:ml.model"
+test = "marmot:ml.model"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"

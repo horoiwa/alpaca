@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from alpaca.adapter.adapter import DataAdapter
+from marmot.adapter.adapter import DataAdapter
 
 
 class TestAdapter:

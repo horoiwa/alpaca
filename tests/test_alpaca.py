@@ -1,4 +1,4 @@
-from alpaca import __version__
+from marmot import __version__
 
 
 def test_version():

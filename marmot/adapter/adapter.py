@@ -4,7 +4,7 @@ import logging
 
 import numpy as np
 import pandas as pd
-from alpaca.adapter.adapter_config import AdapterConfig
+from marmot.adapter.adapter_config import AdapterConfig
 
 
 class DataAdapter:
@@ -21,7 +21,7 @@ class DataAdapter:
         Because it is bad idea to run both machine learning modeling and
         genetic algorithm optimization with the same dataframe,
         this class mediate data exchange between the two classes,
-        alpaca.ml.Model and alpaca.optimize.Optimizer
+        marmot.ml.Model and marmot.optimize.Optimizer
     """
 
     #: if unique elements in a column less than this,
