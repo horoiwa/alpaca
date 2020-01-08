@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "marmot"
 version = "0.1.0"
-description = "machine learning and experimental design for materials discovery"
+description = "Ensemble modeling with hyperparameter tuner"
 license = "MIT"
 readme = "README.rst"
 authors = ["horoiwa <horoiwa195@gmail.com>"]
