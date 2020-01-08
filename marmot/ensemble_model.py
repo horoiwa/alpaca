@@ -12,7 +12,7 @@ from sklearn.metrics import r2_score
 from sklearn.preprocessing import StandardScaler
 
 import matplotlib.pyplot as plt
-from marmot.ml.single_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
+from marmot.single_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
                                     LinearSVRCV, RidgeCV, ElasticNetCV)
 
 
