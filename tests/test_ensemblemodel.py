@@ -2,9 +2,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from marmot.ml.ensemble_model import (EnsembleDartReg, EnsembleGBTReg,
-                                      EnsembleKernelSVR, EnsembleLinearSVR,
-                                      EnsembleRidge)
+from marmot.ensemble_model import (EnsembleDartReg, EnsembleGBTReg,
+                                   EnsembleKernelSVR, EnsembleLinearSVR,
+                                   EnsembleRidge)
 from .support import get_df_boston
 
 
