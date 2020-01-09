@@ -2,6 +2,9 @@
 Marmot: Ensemble modeling with hyperparameter tuner
 =====================================================
 
+.. image:: https://travis-ci.org/horoiwa/marmot.svg?branch=master
+    :target: https://travis-ci.org/horoiwa/marmot
+
 Overview
 ========
 
