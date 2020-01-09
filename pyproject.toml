@@ -17,9 +17,6 @@ optuna = "^0.18.1"
 xgboost = "^0.90.0"
 dataclasses_json = "^0.3.6"
 
-[tool.poetry.scripts]
-main = "marmot:base_model"
-
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
 pylint = "^2.4"

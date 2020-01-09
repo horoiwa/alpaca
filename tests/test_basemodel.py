@@ -7,7 +7,7 @@ from marmot.base_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
 from .support import get_df_boston
 
 
-class TestSingelModels:
+class TestBaseModels:
     """single modelsのテスト
     　　ボストンなのでそこまでテストスコアが悪くないことを確かめる
     """
