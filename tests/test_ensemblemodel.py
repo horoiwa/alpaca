@@ -62,7 +62,7 @@ class TestEnsemblelModels:
         score = model.score(self.X_test, self.y_test)
 
         assert score > self.reasonable_score
-
+    """
     def test_ensemble_dartreg(self):
         model = EnsembleDartReg(**self.args)
 
@@ -71,6 +71,7 @@ class TestEnsemblelModels:
         score = model.score(self.X_test, self.y_test)
 
         assert score > self.reasonable_score
+    """
 
     def test_ensemble_gbtreg(self):
         model = EnsembleGBTReg(**self.args)
