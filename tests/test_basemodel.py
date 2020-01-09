@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from marmot.modelCV import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
+from marmot.base_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
                                  LinearSVRCV, RidgeCV, ElasticNetCV)
 from .support import get_df_boston
 
