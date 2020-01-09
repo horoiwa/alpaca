@@ -18,7 +18,7 @@ xgboost = "^0.90.0"
 dataclasses_json = "^0.3.6"
 
 [tool.poetry.scripts]
-main = "marmot:ml.model"
+main = "marmot:modelsCV"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"

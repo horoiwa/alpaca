@@ -12,13 +12,13 @@ from sklearn.metrics import r2_score
 from sklearn.preprocessing import StandardScaler
 
 import matplotlib.pyplot as plt
-from marmot.single_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
+from marmot.modelCV import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
                                     LinearSVRCV, RidgeCV, ElasticNetCV)
 
 
 class BaseEnsembleModel(metaclass=ABCMeta):
 
-    single_model_cls = []
+    modelCV_cls = []
 
     def __init__(self,
                  n_models=30, col_ratio=0.7, row_ratio=0.7,
@@ -143,38 +143,38 @@ class BaseEnsembleModel(metaclass=ABCMeta):
             raise Exception("Unexpected input")
 
     def _get_model(self):
-        model_cls = random.choice(self.single_model_cls)
+        model_cls = random.choice(self.modelCV_cls)
         return model_cls(n_trials=self.n_trials, metric=self.metric)
 
 
 class EnsembleRidge(BaseEnsembleModel):
 
-    single_model_cls = [RidgeCV]
+    modelCV_cls = [RidgeCV]
 
 
 class EnsembleLinearSVR(BaseEnsembleModel):
 
-    single_model_cls = [LinearSVRCV]
+    modelCV_cls = [LinearSVRCV]
 
 
 class EnsembleKernelSVR(BaseEnsembleModel):
 
-    single_model_cls = [KernelSVRCV]
+    modelCV_cls = [KernelSVRCV]
 
 
 class EnsembleDartReg(BaseEnsembleModel):
 
-    single_model_cls = [DartRegCV]
+    modelCV_cls = [DartRegCV]
 
 
 class EnsembleGBTReg(BaseEnsembleModel):
 
-    single_model_cls = [GBTRegCV]
+    modelCV_cls = [GBTRegCV]
 
 
 class EnsembleLinearReg(BaseEnsembleModel):
 
-    single_model_cls = [RidgeCV, LassoCV, LinearSVRCV, ElasticNetCV]
+    modelCV_cls = [RidgeCV, LassoCV, LinearSVRCV, ElasticNetCV]
 
 
 if __name__ == '__main__':

@@ -19,12 +19,12 @@ class BaseSingleModelCV(metaclass=ABCMeta):
 
     model_cls = None
 
-    def __init__(self, n_trials=300, metric='mse',
-                 n_splits=3, n_repeats=3):
+    def __init__(self, n_trials=200, scale=False, metric='mse',
+                 n_splits=3, n_repeats=3, silent=True):
         self.n_trials = n_trials
         self.metric = metric
-        self.n_splits = 3
-        self.n_repeats = 3
+        self.n_splits = n_splits
+        self.n_repeats = n_repeats
 
     def fit(self, X, y):
         self.X, self.y = self._input_validation(X, y)
