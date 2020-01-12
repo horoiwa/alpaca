@@ -26,13 +26,17 @@ class BaseEnsembleModel(metaclass=ABCMeta):
                  scale=False, n_jobs=1):
 
         self.n_models = n_models
+
         self.col_size = col_ratio
+
         self.row_size = row_ratio
 
         self.n_trials = n_trials
+
         self.metric = metric
 
         self.scale = scale
+
         self.n_jobs = n_jobs
 
     def fit(self, X, y):
@@ -74,8 +78,11 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         return r2_score(y_true, y_pred)
 
     def _rprs_modeling(self, X, y):
-        results = Parallel(n_jobs=self.n_jobs)(
-            [delayed(self._train)(X, y, i) for i in range(self.n_models)])
+        if self.n_jobs > 1:
+            results = Parallel(n_jobs=self.n_jobs)(
+                [delayed(self._train)(X, y, i) for i in range(self.n_models)])
+        else:
+            results = [self._train(X, y, i) for i in range(self.n_models)]
 
         for i, (mask, model) in enumerate(results):
             self.masks[i] = mask

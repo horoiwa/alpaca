@@ -134,6 +134,7 @@ class BaseSingleModelCV(metaclass=ABCMeta):
 
 
 class RidgeCV(BaseSingleModelCV):
+
     model_cls = Ridge
 
     def __call__(self, trial):
@@ -144,6 +145,7 @@ class RidgeCV(BaseSingleModelCV):
 
 
 class LassoCV(BaseSingleModelCV):
+
     model_cls = Lasso
 
     def __call__(self, trial):
@@ -154,6 +156,7 @@ class LassoCV(BaseSingleModelCV):
 
 
 class ElasticNetCV(BaseSingleModelCV):
+
     model_cls = ElasticNet
 
     def __call__(self, trial):
@@ -165,6 +168,7 @@ class ElasticNetCV(BaseSingleModelCV):
 
 
 class LinearSVRCV(BaseSingleModelCV):
+
     model_cls = SVR
 
     def __call__(self, trial):
@@ -178,6 +182,7 @@ class LinearSVRCV(BaseSingleModelCV):
 
 
 class KernelSVRCV(BaseSingleModelCV):
+
     model_cls = SVR
 
     def __call__(self, trial):
@@ -192,6 +197,7 @@ class KernelSVRCV(BaseSingleModelCV):
 
 
 class GBTRegCV(BaseSingleModelCV):
+
     model_cls = xgb.XGBRegressor
 
     def __call__(self, trial):
@@ -213,6 +219,7 @@ class GBTRegCV(BaseSingleModelCV):
 
 
 class DartRegCV(BaseSingleModelCV):
+
     model_cls = xgb.XGBRegressor
 
     def __call__(self, trial):
