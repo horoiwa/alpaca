@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 import pandas as pd
 from sklearn.linear_model import ElasticNet, Lasso, Ridge
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import RepeatedKFold
 from sklearn.svm import SVR
@@ -26,6 +27,8 @@ class BaseSingleModelCV(metaclass=ABCMeta):
         self.metric = metric
 
         self.scale = scale
+
+        self.scaler = None
 
         self.n_splits = n_splits
 
@@ -188,7 +191,7 @@ class GBTRegCV(BaseSingleModelCV):
         grow_policy = trial.suggest_categorical(
             'grow_policy', ['depthwise', 'lossguide'])
 
-        model = self.model_cls(silent=1, booster=booster,
+        model = self.model_cls(verbosity=0, booster=booster,
                                alpha=alpha, max_depth=max_depth, eta=eta,
                                gamma=gamma, grow_policy=grow_policy)
 
@@ -215,7 +218,7 @@ class DartRegCV(BaseSingleModelCV):
                                                     ['tree', 'forest'])
         rate_drop = trial.suggest_loguniform('rate_drop', 1e-8, 1.0)
         skip_drop = trial.suggest_loguniform('skip_drop', 1e-8, 1.0)
-        model = self.model_cls(silent=1, booster=booster,
+        model = self.model_cls(verbosity=0, booster=booster,
                                alpha=alpha, max_depth=max_depth, eta=eta,
                                gamma=gamma, grow_policy=grow_policy,
                                sample_type=sample_type,

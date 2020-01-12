@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -18,9 +19,9 @@ class TestBaseModels:
                             columns=X.columns)
         self.X_train, self.X_test, self.y_train, self.y_test = (
             train_test_split(X_sc, y, test_size=0.3))
-        self.n_trials = 10
+        self.n_trials = 20
         self.metric = "mse"
-        self.reasonable_score = 0.3
+        self.reasonable_score = 0.5
 
     def teardown_method(self):
         del self.X_test
