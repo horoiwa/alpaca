@@ -15,12 +15,14 @@ class AutoModel:
 
     ensembles = []
 
-    def __init__(self, n_trials=1000, metric='mse',
+    def __init__(self, n_trials=1000, metric='mse', scale=True,
                  silent=False, n_splits=3, n_repeats=10):
 
         self.n_trials = n_trials
 
         self.metric = metric
+
+        self.scale = scale
 
         self.config = Config()
 
@@ -120,8 +122,6 @@ class AutoRegressor(AutoModel):
 
         n_models = trial.suggest_categorical("n_models", [10, 30, 50])
 
-        scale = trial.suggest_categorical('scale', [True, False])
-
         n_trials = trial.suggest_categorical("n_trials", [20, 50])
 
         col_ratio = trial.suggest_categorical("col_ratio", [0.7, 0.8, 0.9, 1.0])
@@ -131,7 +131,7 @@ class AutoRegressor(AutoModel):
         n_poly = trial.suggest_int('n_poly', 1, 3)
 
         model = model_cls(n_models=n_models, n_trials=n_trials,
-                          scale=scale, metric=self.metric,
+                          scale=self.scale, metric=self.metric,
                           col_ratio=col_ratio, row_ratio=row_ratio)
 
         score = self.kfold_cv(model, self.X, self.y)
