@@ -15,20 +15,18 @@ class TestEnsemblelModels:
 
     def setup_method(self):
         X, y = get_df_boston()
-        X_sc = pd.DataFrame(StandardScaler().fit_transform(X),
-                            columns=X.columns)
         self.X_train, self.X_test, self.y_train, self.y_test = (
-            train_test_split(X_sc, y, test_size=0.3))
+            train_test_split(X, y, test_size=0.3))
 
         self.args = {"n_models": 10,
                      "col_ratio": 0.8,
                      "row_ratio": 0.8,
-                     "n_trials": 10,
+                     "n_trials": 15,
                      "metric": "mse",
                      "scale": True,
                      "n_jobs": 2}
 
-        self.reasonable_score = 0.3
+        self.reasonable_score = 0.5
 
     def teardown_method(self):
         del self.X_test
