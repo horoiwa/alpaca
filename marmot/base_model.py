@@ -47,7 +47,6 @@ class BaseSingleModelCV(metaclass=ABCMeta):
         self.logger.info("Start hyperparmeter optimization")
 
         if self.scale:
-            self.logger.info("Scale: True")
             self.scaler = StandardScaler()
             self.scaler.fit(self.X)
             self.X = self.scaler.transform(self.X)

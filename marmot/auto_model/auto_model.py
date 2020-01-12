@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 import pandas as pd
 import optuna
@@ -11,11 +11,12 @@ from marmot.ensemble_model import (EnsembleKernelSVR, EnsembleLinearReg,
 from marmot.util import get_logger
 
 
-class AutoModel(mataclass=ABCMeta):
+class AutoModel:
 
     ensembles = []
 
-    def __init__(self, n_trials=100, metric='mse', silent=False):
+    def __init__(self, n_trials=1000, metric='mse',
+                 silent=False, n_splits=3, n_repeats=10):
 
         self.n_trials = n_trials
 
@@ -28,6 +29,10 @@ class AutoModel(mataclass=ABCMeta):
         self.silent = silent
 
         self.logger = get_logger("model")
+
+        self.n_splits = n_splits
+
+        self.n_repeats = n_repeats
 
     def fit(self, X, y):
 
@@ -111,15 +116,23 @@ class AutoRegressor(AutoModel):
 
     def __call__(self, trial):
 
-        models = trial.suggest_categorical("model", ensembles)
+        model_cls = trial.suggest_categorical("model_cls", self.ensembles)
+
+        n_models = trial.suggest_categorical("n_models", [10, 30, 50])
 
         scale = trial.suggest_categorical('scale', [True, False])
 
-        n_trials = trial.suggest_int('n_trials', 10, 200)
+        n_trials = trial.suggest_categorical("n_trials", [20, 50])
+
+        col_ratio = trial.suggest_categorical("col_ratio", [0.7, 0.8, 0.9, 1.0])
+
+        row_ratio = trial.suggest_categorical("col_ratio", [0.5, 0.6, 0.7, 0.8])
 
         n_poly = trial.suggest_int('n_poly', 1, 3)
 
-        model = models(n_trials=n_trials, scale=scale, metrics=self.metrics)
+        model = model_cls(n_models=n_models, n_trials=n_trials,
+                          scale=scale, metric=self.metric,
+                          col_ratio=col_ratio, row_ratio=row_ratio)
 
         score = self.kfold_cv(model, self.X, self.y)
 
@@ -132,7 +145,7 @@ if __name__ == '__main__':
 
     X, y = get_df_boston()
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    model = AutoRegressor()
+    model = AutoRegressor(n_trials=3, metric="r2")
     model.fit(X_train, y_train)
     #print(model.predidct(X_test))
     #print(model.score(X_test, y_test))
