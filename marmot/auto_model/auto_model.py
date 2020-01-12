@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 import pandas as pd
 import optuna
+from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import RepeatedKFold
 
 from marmot.auto_model.config import Config
@@ -29,10 +30,12 @@ class AutoModel(mataclass=ABCMeta):
         self.logger = get_logger("model")
 
     def fit(self, X, y):
+
         self.X, self.y = self._input_validation(X, y)
 
         if self.silent:
             optuna.logging.disable_default_handler()
+
         self.logger.info("Start AutoModeling")
 
         study = optuna.create_study(direction=self.direction)
@@ -46,14 +49,14 @@ class AutoModel(mataclass=ABCMeta):
         self.logger.info(f"Best hyperparams: "
                          + f"{self.best_trial.params}")
 
-    def kfold_cv(self, model):
+    def kfold_cv(self, model, X, y):
         observed = []
         predicted = []
 
         kf = RepeatedKFold(n_splits=self.n_splits, n_repeats=self.n_repeats)
-        for train_index, test_index in kf.split(self.X):
-            X_train, X_test = self.X[train_index], self.X[test_index]
-            y_train, y_test = self.y[train_index], self.y[test_index]
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
             model.fit(X_train, y_train)
 
             predicted += list(model.predict(X_test).flatten())
@@ -97,30 +100,29 @@ class AutoModel(mataclass=ABCMeta):
             raise TypeError("Unexpected X or y")
 
     @abstractmethod
-    def __call__(self):
+    def __call__(self, trial):
         raise NotImplementedError()
 
 
 class AutoRegressor(AutoModel):
 
-    ensemblelayer_candidates = [EnsembleRidge, EnsembleLinearReg,
-                                EnsembleLinearSVR, EnsembleKernelSVR]
+    ensembles = [EnsembleRidge, EnsembleLinearReg,
+                 EnsembleLinearSVR, EnsembleKernelSVR]
 
-    def __call__(self):
-        booster = trial.suggest_categorical('booster', ['gbtree'])
-        alpha = trial.suggest_loguniform('alpha', 1e-8, 1.0)
+    def __call__(self, trial):
 
-        max_depth = trial.suggest_int('max_depth', 1, 9)
-        eta = trial.suggest_loguniform('eta', 1e-8, 1.0)
-        gamma = trial.suggest_loguniform('gamma', 1e-8, 1.0)
-        grow_policy = trial.suggest_categorical(
-            'grow_policy', ['depthwise', 'lossguide'])
+        models = trial.suggest_categorical("model", ensembles)
 
-        model = self.model_cls(verbosity=0, booster=booster,
-                               alpha=alpha, max_depth=max_depth, eta=eta,
-                               gamma=gamma, grow_policy=grow_policy)
+        scale = trial.suggest_categorical('scale', [True, False])
 
-        score = self.kfold_cv(model)
+        n_trials = trial.suggest_int('n_trials', 10, 200)
+
+        n_poly = trial.suggest_int('n_poly', 1, 3)
+
+        model = models(n_trials=n_trials, scale=scale, metrics=self.metrics)
+
+        score = self.kfold_cv(model, self.X, self.y)
+
         return score
 
 
