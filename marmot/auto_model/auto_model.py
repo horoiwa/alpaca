@@ -111,12 +111,12 @@ class AutoModel:
 
 class AutoRegressor(AutoModel):
 
-    ensembles = [EnsembleRidge, EnsembleLinearReg,
-                 EnsembleLinearSVR, EnsembleKernelSVR]
+    models = [EnsembleRidge, EnsembleLinearReg,
+              EnsembleLinearSVR, EnsembleKernelSVR]
 
     def __call__(self, trial):
 
-        model_cls = trial.suggest_categorical("model_cls", self.ensembles)
+        model_cls = trial.suggest_categorical("model_cls", self.models)
 
         n_models = trial.suggest_categorical("n_models", [10, 30, 50])
 
