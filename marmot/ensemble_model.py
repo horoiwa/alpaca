@@ -23,7 +23,8 @@ class BaseEnsembleModel(metaclass=ABCMeta):
     def __init__(self,
                  n_models=30, col_ratio=0.7, row_ratio=0.7,
                  n_trials=100, metric='mse',
-                 scale=True, n_jobs=1):
+                 scale=False, n_jobs=1):
+
         self.n_models = n_models
         self.col_size = col_ratio
         self.row_size = row_ratio
@@ -38,7 +39,6 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         X, y = self._input_validation(X, y)
 
         self.models = {}
-        self.scalers = {}
         self.masks = {}
         self._rprs_modeling(X, y)
 
@@ -49,11 +49,8 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         for i in range(self.n_models):
             model = self.models[i]
             mask = self.masks[i]
-            scaler = self.scalers[i]
 
-            X_ = X.loc[:, mask]
-            if scaler:
-                X_ = pd.DataFrame(scaler.transform(X_), columns=X_.columns)
+            X_ = X[:, mask]
             y_pred = model.predict(X_)
             df_result[i] = list(y_pred)
 
@@ -71,80 +68,65 @@ class BaseEnsembleModel(metaclass=ABCMeta):
     def score(self, X, y):
         X, y = self._input_validation(X, y)
 
-        y_true = y.values.flatten()
+        y_true = y.flatten()
         y_pred = self.predict(X).flatten()
 
         return r2_score(y_true, y_pred)
-
-    def valid(self, X, y, test_size=0.3):
-        X, y = self._input_validation(X, y)
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size)
-        self.fit(X_train, y_train)
-
-        print("Tran R2 score", self.score(X_train, y_train))
-        print("Test R2 score", self.score(X_test, y_test))
 
     def _rprs_modeling(self, X, y):
         results = Parallel(n_jobs=self.n_jobs)(
             [delayed(self._train)(X, y, i) for i in range(self.n_models)])
 
-        for i, (mask, model, scaler) in enumerate(results):
+        for i, (mask, model) in enumerate(results):
             self.masks[i] = mask
             self.models[i] = model
-            self.scalers[i] = scaler
 
     def _train(self, X, y, i):
         while True:
-            sample_mask = [bool(np.random.binomial(1, self.row_size))
-                           for i in range(X.shape[0])]
-            mask = [bool(np.random.binomial(1, self.col_size))
-                    for i in range(X.shape[1])]
-            if np.any(sample_mask) and np.any(mask):
+            row_mask = np.random.binomial(
+                1, self.row_size, X.shape[0]).astype(bool)
+            col_mask = np.random.binomial(
+                1, self.col_size, X.shape[1]).astype(bool)
+            if np.any(row_mask) and np.any(col_mask):
                 break
 
-        X_rprs = copy.deepcopy(X.loc[sample_mask, mask])
-        if self.scale:
-            scaler = StandardScaler()
-            scaler.fit(X_rprs)
-            X_rprs = pd.DataFrame(scaler.transform(X_rprs),
-                                  index=X_rprs.index, columns=X_rprs.columns)
-        else:
-            scaler = None
-
-        y_rp = copy.deepcopy(y[sample_mask])
+        X_rprs = copy.deepcopy(X[row_mask, :][:, col_mask])
+        y_rp = copy.deepcopy(y[row_mask])
 
         model = self._get_model()
         model.fit(X_rprs, y_rp)
 
-        mask = copy.deepcopy(mask)
+        mask = copy.deepcopy(col_mask)
         model = copy.deepcopy(model)
-        scaler = copy.deepcopy(scaler)
 
-        return mask, model, scaler
+        return mask, model
 
     def _input_validation(self, *args, **kwargs):
         if len(args) >= 1:
             X = args[0]
             if isinstance(X, pd.Series):
                 X = pd.DataFrame(X).T
-            assert isinstance(X, pd.DataFrame), 'X must be DataFrame'
+                X = X.values
+            elif isinstance(X, pd.DataFrame):
+                X = X.values
 
             if len(args) >= 2:
                 y = args[1]
                 if isinstance(y, pd.Series):
-                    y = pd.DataFrame(y, columns=[y.name])
-                assert isinstance(y, pd.DataFrame), 'y must be DataFrame'
+                    y = y.values.flatten()
+                elif isinstance(y, pd.DataFrame):
+                    y = y.values.flatten()
+
                 return X, y
             else:
                 return X
         else:
-            raise Exception("Unexpected input")
+            raise TypeError("Unexpected X or y")
 
     def _get_model(self):
         model_cls = random.choice(self.base_model_cls)
-        return model_cls(n_trials=self.n_trials, metric=self.metric)
+        return model_cls(n_trials=self.n_trials, metric=self.metric,
+                         scale=self.scale)
 
 
 class EnsembleRidge(BaseEnsembleModel):
@@ -179,19 +161,25 @@ class EnsembleLinearReg(BaseEnsembleModel):
 
 if __name__ == '__main__':
     from tests.support import get_df_boston
+    from sklearn.model_selection import train_test_split
+
     args = {"n_models": 3,
             "col_ratio": 0.8,
             "row_ratio": 0.8,
-            "n_trials": 10,
+            "n_trials": 20,
             "metric": "mse",
             "scale": True,
             "n_jobs": 2}
 
     X, y = get_df_boston()
-    model = EnsembleLinearReg(**args)
-    model.fit(X, y)
-    print(model.predict(X).shape)
-    print(model.predict_proba(X).shape)
-    score = model.score(X, y)
-    print(score)
-    #model.valid(X, y)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3)
+
+    #model = EnsembleRidge(**args)
+    model = EnsembleKernelSVR(**args)
+
+    model.fit(X_train, y_train)
+
+    print(model.score(X_test, y_test))
+    print(model.predict(X.iloc[1]))
+    print(model.predict_proba(X.iloc[1]))
