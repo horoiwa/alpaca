@@ -46,6 +46,12 @@ class BaseSingleModelCV(metaclass=ABCMeta):
             optuna.logging.disable_default_handler()
         self.logger.info("Start hyperparmeter optimization")
 
+        if self.scale:
+            self.logger.info("Scale: True")
+            self.scaler = StandardScaler()
+            self.scaler.fit(self.X)
+            self.X = self.scaler.transform(self.X)
+
         study = optuna.create_study(direction=self.direction)
         study.optimize(self, n_trials=self.n_trials)
         self.best_trial = study.best_trial
@@ -62,11 +68,13 @@ class BaseSingleModelCV(metaclass=ABCMeta):
     def predict(self, X):
         X = self._input_validation(X)
         if self.scale:
-            raise NotImplementedError("scale")
+            X = self.scaler.transform(X)
         return self.best_model.predict(X)
 
     def score(self, X, y):
         X, y = self._input_validation(X, y)
+        if self.scale:
+            X = self.scaler.transform(X)
 
         return self.best_model.score(X, y)
 
@@ -76,12 +84,12 @@ class BaseSingleModelCV(metaclass=ABCMeta):
 
         kf = RepeatedKFold(n_splits=self.n_splits, n_repeats=self.n_repeats)
         for train_index, test_index in kf.split(self.X):
-            X_train, X_test = self.X.iloc[train_index], self.X.iloc[test_index]
-            y_train, y_test = self.y.iloc[train_index], self.y.iloc[test_index]
+            X_train, X_test = self.X[train_index], self.X[test_index]
+            y_train, y_test = self.y[train_index], self.y[test_index]
             model.fit(X_train, y_train)
 
             predicted += list(model.predict(X_test).flatten())
-            observed += list(y_test.values.flatten())
+            observed += list(y_test.flatten())
 
         if self.metric == 'mse':
             score = mean_squared_error(observed, predicted)
@@ -103,11 +111,16 @@ class BaseSingleModelCV(metaclass=ABCMeta):
             X = args[0]
             if isinstance(X, pd.Series):
                 X = pd.DataFrame(X).T
+                X = X.values
+            elif isinstance(X, pd.DataFrame):
+                X = X.values
 
             if len(args) >= 2:
                 y = args[1]
                 if isinstance(y, pd.Series):
-                    y = pd.DataFrame(y, columns=[y.name])
+                    y = y.values.flatten()
+                elif isinstance(y, pd.DataFrame):
+                    y = y.values.flatten()
 
                 return X, y
             else:
@@ -237,11 +250,12 @@ if __name__ == '__main__':
 
     X, y = get_df_boston()
     X_sc = pd.DataFrame(StandardScaler().fit_transform(X), columns=X.columns)
-    X_train, X_test, y_train, y_test = train_test_split(X_sc, y, test_size=0.3)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y.values, test_size=0.3)
 
-    model = LinearSVRCV(n_trials=10)
-    #model = GBTRegCV(n_trials=10)
-    #model = KernelSVRCV(n_trials=50, metric="r2")
+    #model = LinearSVRCV(n_trials=30, scale=True)
+    #model = GBTRegCV(n_trials=10, scale=True)
+    model = KernelSVRCV(n_trials=50, metric="r2", scale=True)
     model.fit(X_train, y_train)
 
     print(model.score(X_test, y_test))
