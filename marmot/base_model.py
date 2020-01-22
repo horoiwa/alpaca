@@ -20,7 +20,7 @@ class BaseSingleModelCV(metaclass=ABCMeta):
     model_cls = None
 
     def __init__(self, n_trials=200, metric='mse', scale=False,
-                 n_splits=3, n_repeats=10, silent=True, logger="base"):
+                 n_splits=3, n_repeats=10, silent=True, logger="basemodel"):
 
         self.n_trials = n_trials
 
@@ -44,7 +44,6 @@ class BaseSingleModelCV(metaclass=ABCMeta):
 
         if self.silent:
             optuna.logging.disable_default_handler()
-        self.logger.info("Start hyperparmeter optimization")
 
         if self.scale:
             self.scaler = StandardScaler()
@@ -55,11 +54,11 @@ class BaseSingleModelCV(metaclass=ABCMeta):
         study.optimize(self, n_trials=self.n_trials)
         self.best_trial = study.best_trial
 
-        self.logger.info(f"Best {self.metric} score: "
-                         + f"{round(self.best_trial.value, 2)}")
-        self.logger.info(f"Best hyperparams: "
-                         + f"{self.best_trial.params}")
-
+        self.logger.info(f"\n"
+                         f"Best {self.metric} score: "
+                         f"{round(self.best_trial.value, 2)}\n"
+                         f"Best hyperparams: "
+                         f"{self.best_trial.params}\n")
 
         self.best_model = self.model_cls(**self.best_trial.params)
         self.best_model.fit(self.X, self.y)
@@ -254,13 +253,13 @@ if __name__ == '__main__':
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
 
-    X, y = get_df_boston()
+    X, y = get_df_bostoln()
     X_sc = pd.DataFrame(StandardScaler().fit_transform(X), columns=X.columns)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y.values, test_size=0.3)
 
     #model = LinearSVRCV(n_trials=30, scale=True)
-    #model = GBTRegCV(n_trials=10, scale=True)
+    model = GBTRegCV(n_trials=10, scale=True)
     model = KernelSVRCV(n_trials=50, metric="r2", scale=True)
     model.fit(X_train, y_train)
 

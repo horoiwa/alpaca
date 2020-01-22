@@ -13,7 +13,8 @@ from sklearn.preprocessing import StandardScaler
 
 import matplotlib.pyplot as plt
 from marmot.base_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
-                                    LinearSVRCV, RidgeCV, ElasticNetCV)
+                               LinearSVRCV, RidgeCV, ElasticNetCV)
+from marmot.util import get_logger
 
 
 class BaseEnsembleModel(metaclass=ABCMeta):
@@ -23,7 +24,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
     def __init__(self,
                  n_models=30, col_ratio=0.7, row_ratio=0.7,
                  n_trials=100, metric='mse',
-                 scale=False, n_jobs=1):
+                 scale=False, n_jobs=1, logger='ensemble'):
 
         self.n_models = n_models
 
@@ -39,12 +40,26 @@ class BaseEnsembleModel(metaclass=ABCMeta):
 
         self.n_jobs = n_jobs
 
+        self.logger = get_logger(logger)
+
     def fit(self, X, y):
+        self.info()
+
         X, y = self._input_validation(X, y)
 
         self.models = {}
         self.masks = {}
         self._rprs_modeling(X, y)
+    
+    def info(self):
+        self.logger.info(f'\n'
+                         f'class: {self.__class__.__name__}\n'
+                         f'n_models: {self.n_models}\n'
+                         f'scale: {self.scale}\n'
+                         f'col_ratio: {self.col_size}\n'
+                         f'row_ratio: {self.row_size}\n'
+                         f'n_trials for each basemodel: {self.n_trials}\n'
+                         f'n_jobs: {self.n_jobs}\n')
 
     def predict(self, X, uncertainty=False):
         X = self._input_validation(X)
@@ -170,7 +185,7 @@ if __name__ == '__main__':
     from tests.support import get_df_boston
     from sklearn.model_selection import train_test_split
 
-    args = {"n_models": 3,
+    args = {"n_models": 5,
             "col_ratio": 0.8,
             "row_ratio": 0.8,
             "n_trials": 20,
