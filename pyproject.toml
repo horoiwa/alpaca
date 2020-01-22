@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "marmot"
-version = "0.1.1"
+version = "0.1.2"
 description = "Ensemble modeling with hyperparameter tuner"
 license = "MIT"
 readme = "README.rst"
