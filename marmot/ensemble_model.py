@@ -12,14 +12,14 @@ from sklearn.metrics import r2_score
 from sklearn.preprocessing import StandardScaler
 
 import matplotlib.pyplot as plt
-from marmot.base_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
+from marmot.single_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
                                LinearSVRCV, RidgeCV, ElasticNetCV)
 from marmot.util import get_logger
 
 
 class BaseEnsembleModel(metaclass=ABCMeta):
 
-    base_model_cls = []
+    single_model_cls = []
 
     def __init__(self,
                  n_models=30, col_ratio=0.7, row_ratio=0.7,
@@ -50,7 +50,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         self.models = {}
         self.masks = {}
         self._rprs_modeling(X, y)
-    
+
     def info(self):
         self.logger.info(f'\n'
                          f'class: {self.__class__.__name__}\n'
@@ -146,39 +146,39 @@ class BaseEnsembleModel(metaclass=ABCMeta):
             raise TypeError("Unexpected X or y")
 
     def _get_model(self):
-        model_cls = random.choice(self.base_model_cls)
+        model_cls = random.choice(self.single_model_cls)
         return model_cls(n_trials=self.n_trials, metric=self.metric,
                          scale=self.scale)
 
 
 class EnsembleRidge(BaseEnsembleModel):
 
-    base_model_cls = [RidgeCV]
+    single_model_cls = [RidgeCV]
 
 
 class EnsembleLinearSVR(BaseEnsembleModel):
 
-    base_model_cls = [LinearSVRCV]
+    single_model_cls = [LinearSVRCV]
 
 
 class EnsembleKernelSVR(BaseEnsembleModel):
 
-    base_model_cls = [KernelSVRCV]
+    single_model_cls = [KernelSVRCV]
 
 
 class EnsembleDartReg(BaseEnsembleModel):
 
-    base_model_cls = [DartRegCV]
+    single_model_cls = [DartRegCV]
 
 
 class EnsembleGBTReg(BaseEnsembleModel):
 
-    base_model_cls = [GBTRegCV]
+    single_model_cls = [GBTRegCV]
 
 
 class EnsembleLinearReg(BaseEnsembleModel):
 
-    base_model_cls = [RidgeCV, LassoCV, LinearSVRCV, ElasticNetCV]
+    single_model_cls = [RidgeCV, LassoCV, LinearSVRCV, ElasticNetCV]
 
 
 if __name__ == '__main__':

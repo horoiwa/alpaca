@@ -7,6 +7,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import RepeatedKFold
 from sklearn.svm import SVR
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.kernel_ridge import KernelRidge
 import optuna
 import xgboost as xgb
 
@@ -165,6 +167,40 @@ class ElasticNetCV(BaseSingleModelCV):
         return score
 
 
+class PLSRCV(BaseSingleModelCV):
+
+    model_cls = PLSRegression
+
+    def __call__(self, trial):
+        n_components = trial.suggest_int('n_components',
+                                         1, int(self.X.shape[1]/2))
+        model = self.model_cls(n_components=n_components)
+        score = self.kfold_cv(model)
+        return score
+
+
+class KernelRidgeCV(BaseSingleModelCV):
+
+    model_cls = KernelRidge
+
+    def __call__(self, trial):
+        kernel = trial.suggest_categorical('kernel', ['rbf', 'polynomial'])
+        alpha = trial.suggest_loguniform('alpha', 1e-3, 1e2)
+        gamma = trial.suggest_loguniform('gamma', 1e-3, 1e3)
+
+        if kernel == 'polynomial':
+            degree = trial.suggest_int('degree', 1, 5)
+            model = self.model_cls(kernel=kernel, alpha=alpha,
+                                   degree=degree, gamma=gamma)
+        elif kernel == 'rbf':
+            model = self.model_cls(kernel=kernel, alpha=alpha, gamma=gamma)
+        else:
+            raise Exception("Unexpected Error")
+
+        score = self.kfold_cv(model)
+        return score
+
+
 class LinearSVRCV(BaseSingleModelCV):
 
     model_cls = SVR
@@ -253,16 +289,18 @@ if __name__ == '__main__':
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
 
-    X, y = get_df_bostoln()
+    X, y = get_df_boston()
     X_sc = pd.DataFrame(StandardScaler().fit_transform(X), columns=X.columns)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y.values, test_size=0.3)
 
     #model = LinearSVRCV(n_trials=30, scale=True)
-    model = GBTRegCV(n_trials=10, scale=True)
-    model = KernelSVRCV(n_trials=50, metric="r2", scale=True)
+    #model = KernelRidgeCV(n_trials=150, metric="r2", scale=True)
+    #model = KernelSVRCV(n_trials=150, metric="r2", scale=True)
+    model = PLSRCV(n_trials=50, metric="r2", scale=True)
     model.fit(X_train, y_train)
 
     print(model.score(X_test, y_test))
     print(model.predict(X.iloc[1]))
     print(model.best_model)
+

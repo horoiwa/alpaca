@@ -1,14 +1,16 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from marmot.base_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
-                                 LinearSVRCV, RidgeCV, ElasticNetCV)
+from marmot.single_model import (PLSRCV, DartRegCV, ElasticNetCV, GBTRegCV,
+                                 KernelRidgeCV, KernelSVRCV, LassoCV,
+                                 LinearSVRCV, RidgeCV)
+
 from .support import get_df_boston
 
 
-class TestBaseModels:
+class TestSingleModels:
     """single modelsのテスト
     　　ボストンなのでそこまでテストスコアが悪くないことを確かめる
     """
@@ -73,6 +75,24 @@ class TestBaseModels:
     def test_kernelSVR(self):
         model = KernelSVRCV(n_trials=self.n_trials, scale=True,
                             metric=self.metric)
+        model.fit(self.X_train, self.y_train)
+        model.predict(self.X_test)
+        score = model.score(self.X_test, self.y_test)
+
+        assert score > self.reasonable_score
+
+    def test_kernelRidge(self):
+        model = KernelRidgeCV(n_trials=self.n_trials, scale=True,
+                              metric=self.metric)
+        model.fit(self.X_train, self.y_train)
+        model.predict(self.X_test)
+        score = model.score(self.X_test, self.y_test)
+
+        assert score > self.reasonable_score
+
+    def test_PLSR(self):
+        model = PLSRCV(n_trials=self.n_trials, scale=True,
+                       metric=self.metric)
         model.fit(self.X_train, self.y_train)
         model.predict(self.X_test)
         score = model.score(self.X_test, self.y_test)
