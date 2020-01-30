@@ -12,7 +12,7 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from marmot.single_model import (DartRegCV, ElasticNetCV, GBTRegCV,
+from marmot.single_model import (PLSRCV, DartRegCV, ElasticNetCV, GBTRegCV,
                                  KernelRidgeCV, KernelSVRCV, LassoCV,
                                  LinearSVRCV, RidgeCV)
 from marmot.util import get_logger
@@ -182,9 +182,14 @@ class EnsembleGBTReg(BaseEnsembleModel):
     single_model_cls = [GBTRegCV]
 
 
+class EnsemblePLSR(BaseEnsembleModel):
+
+    single_model_cls = [PLSRCV]
+
+
 class EnsembleLinearReg(BaseEnsembleModel):
 
-    single_model_cls = [RidgeCV, LassoCV, LinearSVRCV, ElasticNetCV]
+    single_model_cls = [RidgeCV, LassoCV, LinearSVRCV, ElasticNetCV, PLSRCV]
 
 
 class EnsembleKernelReg(BaseEnsembleModel):
