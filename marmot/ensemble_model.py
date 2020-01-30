@@ -1,19 +1,20 @@
 import copy
 import pickle
-from abc import ABCMeta, abstractmethod
 import random
+from abc import ABCMeta, abstractmethod
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from scipy.stats import pearsonr
-from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import r2_score
+from sklearn.model_selection import KFold, train_test_split
 from sklearn.preprocessing import StandardScaler
 
-import matplotlib.pyplot as plt
-from marmot.single_model import (DartRegCV, GBTRegCV, KernelSVRCV, LassoCV,
-                               LinearSVRCV, RidgeCV, ElasticNetCV)
+from marmot.single_model import (DartRegCV, ElasticNetCV, GBTRegCV,
+                                 KernelRidgeCV, KernelSVRCV, LassoCV,
+                                 LinearSVRCV, RidgeCV)
 from marmot.util import get_logger
 
 
@@ -164,6 +165,11 @@ class EnsembleLinearSVR(BaseEnsembleModel):
 class EnsembleKernelSVR(BaseEnsembleModel):
 
     single_model_cls = [KernelSVRCV]
+
+
+class EnsembleKernelRidge(BaseEnsembleModel):
+
+    single_model_cls = [KernelRidgeCV]
 
 
 class EnsembleDartReg(BaseEnsembleModel):
