@@ -3,8 +3,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from marmot.ensemble_model import (EnsembleDartReg, EnsembleGBTReg,
+                                   EnsembleKernelReg, EnsembleKernelRidge,
                                    EnsembleKernelSVR, EnsembleLinearSVR,
                                    EnsembleRidge)
+
 from .support import get_df_boston
 
 
@@ -73,6 +75,24 @@ class TestEnsemblelModels:
 
     def test_ensemble_gbtreg(self):
         model = EnsembleGBTReg(**self.args)
+
+        model.fit(self.X_train, self.y_train)
+        model.predict(self.X_test)
+        score = model.score(self.X_test, self.y_test)
+
+        assert score > self.reasonable_score
+
+    def test_ensemble_kernelridge(self):
+        model = EnsembleKernelRidge(**self.args)
+
+        model.fit(self.X_train, self.y_train)
+        model.predict(self.X_test)
+        score = model.score(self.X_test, self.y_test)
+
+        assert score > self.reasonable_score
+
+    def test_ensemble_kernelreg(self):
+        model = EnsembleKernelReg(**self.args)
 
         model.fit(self.X_train, self.y_train)
         model.predict(self.X_test)

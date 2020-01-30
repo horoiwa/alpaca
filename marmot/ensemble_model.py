@@ -187,6 +187,11 @@ class EnsembleLinearReg(BaseEnsembleModel):
     single_model_cls = [RidgeCV, LassoCV, LinearSVRCV, ElasticNetCV]
 
 
+class EnsembleKernelReg(BaseEnsembleModel):
+
+    single_model_cls = [KernelRidgeCV, KernelSVRCV]
+
+
 if __name__ == '__main__':
     from tests.support import get_df_boston
     from sklearn.model_selection import train_test_split
