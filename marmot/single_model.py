@@ -2,6 +2,7 @@ import warnings
 from abc import ABCMeta, abstractmethod
 
 import pandas as pd
+import numpy as np
 from sklearn.linear_model import ElasticNet, Lasso, Ridge
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
@@ -21,7 +22,7 @@ class BaseSingleModelCV(metaclass=ABCMeta):
 
     model_cls = None
 
-    def __init__(self, n_trials=200, metric='mse', scale=False,
+    def __init__(self, n_trials=200, metric='mse', scale=False, scale_y=False,
                  n_splits=3, n_repeats=10, silent=True, logger="basemodel"):
 
         self.n_trials = n_trials
@@ -31,6 +32,8 @@ class BaseSingleModelCV(metaclass=ABCMeta):
         self.scale = scale
 
         self.scaler = None
+
+        self.scale_y = scale_y
 
         self.n_splits = n_splits
 
@@ -52,6 +55,9 @@ class BaseSingleModelCV(metaclass=ABCMeta):
             self.scaler.fit(self.X)
             self.X = self.scaler.transform(self.X)
 
+        if self.scale_y:
+            self.y = np.log1p(self.y)
+
         study = optuna.create_study(direction=self.direction)
         study.optimize(self, n_trials=self.n_trials)
         self.best_trial = study.best_trial
@@ -69,12 +75,19 @@ class BaseSingleModelCV(metaclass=ABCMeta):
         X = self._input_validation(X)
         if self.scale:
             X = self.scaler.transform(X)
-        return self.best_model.predict(X)
+        pred = self.best_model.predict(X)
+
+        if self.scale_y:
+            pred = np.exp(pred) - 1
+
+        return pred
 
     def score(self, X, y):
         X, y = self._input_validation(X, y)
         if self.scale:
             X = self.scaler.transform(X)
+        if self.scale_y:
+            y = np.log1p(y)
 
         return self.best_model.score(X, y)
 
@@ -297,10 +310,11 @@ if __name__ == '__main__':
     #model = LinearSVRCV(n_trials=30, scale=True)
     #model = KernelRidgeCV(n_trials=150, metric="r2", scale=True)
     #model = KernelSVRCV(n_trials=150, metric="r2", scale=True)
-    model = PLSRCV(n_trials=50, metric="r2", scale=True)
+    model = RidgeCV(n_trials=10, scale_y=True, metric="r2", scale=True)
     model.fit(X_train, y_train)
 
     print(model.score(X_test, y_test))
     print(model.predict(X.iloc[1]))
+    print(y.iloc[1])
     print(model.best_model)
 
