@@ -18,8 +18,6 @@ xgboost = "^0.90.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
-pylint = "^2.4"
-flake8 = "^3.7"
 
 [build-system]
 requires = ["poetry>=0.12"]
