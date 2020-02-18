@@ -26,6 +26,7 @@ class TestEnsemblelModels:
                      "n_trials": 15,
                      "metric": "mse",
                      "scale": True,
+                     "scale_y": True,
                      "n_jobs": 2}
 
         self.reasonable_score = 0.5
