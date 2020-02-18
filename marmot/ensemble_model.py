@@ -21,7 +21,8 @@ class BaseEnsembleModel(metaclass=ABCMeta):
     def __init__(self,
                  n_models=30, col_ratio=1.0, row_ratio=0.7,
                  n_trials=100, metric='mse',
-                 scale=False, n_jobs=1, logger='ensemble'):
+                 scale=False, scale_y=False,
+                 n_jobs=1, logger='ensemble'):
 
         self.n_models = n_models
 
@@ -34,6 +35,8 @@ class BaseEnsembleModel(metaclass=ABCMeta):
         self.metric = metric
 
         self.scale = scale
+
+        self.scale_y = scale_y
 
         self.n_jobs = n_jobs
 
@@ -145,7 +148,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
     def _get_model(self):
         model_cls = random.choice(self.single_model_cls)
         return model_cls(n_trials=self.n_trials, metric=self.metric,
-                         scale=self.scale)
+                         scale=self.scale, scale_y=self.scale_y)
 
 
 class EnsembleRidge(BaseEnsembleModel):
