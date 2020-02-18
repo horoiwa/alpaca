@@ -1,16 +1,11 @@
 import copy
-import pickle
 import random
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from scipy.stats import pearsonr
 from sklearn.metrics import r2_score
-from sklearn.model_selection import KFold, train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 from marmot.single_model import (PLSRCV, DartRegCV, ElasticNetCV, GBTRegCV,
                                  KernelRidgeCV, KernelSVRCV, LassoCV,
@@ -23,7 +18,7 @@ class BaseEnsembleModel(metaclass=ABCMeta):
     single_model_cls = []
 
     def __init__(self,
-                 n_models=30, col_ratio=0.7, row_ratio=0.7,
+                 n_models=30, col_ratio=1.0, row_ratio=0.7,
                  n_trials=100, metric='mse',
                  scale=False, n_jobs=1, logger='ensemble'):
 
